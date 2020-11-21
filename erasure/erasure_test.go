@@ -1,4 +1,4 @@
-package main
+package erasure
 
 import (
 	"fmt"
@@ -31,28 +31,6 @@ func BenchmarkOriginalErasure(b *testing.B) {
 }
 
 func BenchmarkParallelErasure(b *testing.B) {
-	var res *rsmt2d.ExtendedDataSquare
-	workers := 8
-	for i := uint(2); i < 50; i++ {
-		data := genRandDS(i * i)
-		b.Run(
-			fmt.Sprintf("multi-threaded %d thread data square width %d", workers, i*i),
-			func(b *testing.B) {
-				for i := 0; i < b.N; i++ {
-					eds := ParaScenario(data, 1)
-					res = eds
-				}
-			},
-		)
-	}
-	dump = res
-}
-
-//////////////////////////////////////////////
-// Data Availability Header Hashing
-//////////////////////////////////////////////
-
-func BenchmarkOriginalHeaderHash(b *testing.B) {
 	var res *rsmt2d.ExtendedDataSquare
 	workers := 8
 	for i := uint(2); i < 50; i++ {

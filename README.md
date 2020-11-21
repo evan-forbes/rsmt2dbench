@@ -2,7 +2,7 @@
 
 ## Erasure Data Generation in rsmt2d
 
-One point of easy paralleziation is to simple schedule some number of goroutines to generate erasure data for each column and row of the original data square. This effectively uses the same code as the original method `erasureExtentSquare` of the type `ExtendedDataSquare`
+One point of easy paralleziation is to simply schedule some number of goroutines to generate erasure data for each column and row of the original data square. This effectively uses the same code as the original method `erasureExtentSquare` of the type `ExtendedDataSquare`
 
 ```Golang
 // Extend original square horizontally and vertically
@@ -15,7 +15,7 @@ One point of easy paralleziation is to simple schedule some number of goroutines
 // |   E   |
 // |       |
 //  -------
-// feed the first set of jobs for datasquare extension
+// feed the first set of jobs for data square extension
 phaseOneJobs := make(chan uint, eds.originalDataWidth)
 go func() {
     defer close(phaseOneJobs)
@@ -84,9 +84,9 @@ Compared with the original method, this implementation also requires a mutex and
 Here are some benchmarks for my quick and dirty multithreaded implementation of erasure data in rsmt2d
 
 ![Performance](performance.png) 
-The performance is increased roughly 4 fold on an 8 core cpu. 
-![Overhead](overhead.png)
-The overhead was determined by comparing the current implementation with the multithreaded version limited to a single thread. While the overhead is within the margin of error time wise, I expect other measurements of overhead to be well above the current implementation due to the extra allocations required.
+The performance is increased roughly 4 fold on a 8 core, 16 thread cpu with GOMAXPROCS set to 16.
+![Percent Change](overhead_erasure.png)
+There is observable overhead introduced with the multithreaded implementation. At the maximum data square width, 128, there is about an 8% penalty when only a single thread is provided. As one might expect for a non io bound parallized workload, allowing more gouritines than there are virtual cpus results in non-optimized performance.
 
 ![trace](multithread_8_trace.png)
 The trace is... nasty. There seems to be quite of lot of room for improvement, but I'm not sure how much due to the [3rd quadrant](https://github.com/lazyledger/lazyledger-specs/blob/master/specs/figures/rs2d_quadrants.svg) needing to be computed after the 2nd.
@@ -94,7 +94,7 @@ The trace is... nasty. There seems to be quite of lot of room for improvement, b
 spreadsheet [here](https://docs.google.com/spreadsheets/d/1oLfHhEMRSsz99A26wBLddiLgaZiJN0P9c4y1hoHj2IE/edit?usp=sharing)
 
 ## Data Availability Header NMT Generation
-As mentioned in the github issue, parallelizing the nmt generation is also an easy way to decrease the time needed to create the data availabilty header hash. We can basically copy and paste the current implementation into a similar worker/job feeding structure as shown in the previous section.
+As mentioned in the github issue, parallelizing the nmt generation is another easy way to decrease the time needed to create the data availabilty header hash. We can basically copy and paste the current implementation into a similar worker/job feeding structure as the previous section.
 ```Golang
 work := func(wg *sync.WaitGroup, dah *DataAvailabilityHeader, jobs <-chan uint) {
     defer wg.Done()
@@ -131,4 +131,20 @@ work := func(wg *sync.WaitGroup, dah *DataAvailabilityHeader, jobs <-chan uint) 
     }
 }
 ```
+Each nmt can be generated independently and there are only a few minor extra allocations needed to safely add goroutines, so we should expect there to be less overhead for the multithreaded implementation. We should also expect to have a greater increase in performance per thread added.
+![perforance per thread](performance_per_thread_nmt.png)
+Performance was increase a little less than 6x by adding 16 threads.
+![overhead](overhead_nmt.png)
+Adding more goroutines doesn't seem to introduce meaningful overhead.
+![trace](nmt_trace.png)
+The Trace looks significantly more uniform than for the erasure data generation, which explains the 6x increase in performance. The next steps should be looking into what can be done to get the expected ~8x performance improvement for such a parallelizable workload (It can be achieved if you turn off garbage collection, I tried just for fun.)
+
+## Combining the Two Approaches
+I also ran benchmarks for combining the two approaches. They're about what you would expect if you added the times for each previous two benchmarks.
+
+## Conclusions
+As mentioned in the issue, there are opportunities to parallelize data availability header generation. The unoptimized implementations provide more performance, but there's still room for improvement. In the future, should the performance be required, there are easy paths forward.
+
+
+
 
