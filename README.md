@@ -143,7 +143,7 @@ The Trace looks significantly more uniform than for the erasure data generation,
 I also ran benchmarks for combining the two approaches. They're about what you would expect if you added the times for each previous two benchmarks (see `combined_performance.png`).
 
 ## Conclusions
-As mentioned in the issue, there are opportunities to parallelize data availability header generation. These rather unoptimized implementations show that there are options for easy performance gains should they be required.
+As mentioned in the issue, there are opportunities to parallelize data availability header generation. These rather unoptimized implementations show that there are options for easy performance gains should that be required.
 
 
 
