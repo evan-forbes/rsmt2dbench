@@ -140,10 +140,10 @@ Adding more goroutines doesn't seem to introduce meaningful overhead.
 The Trace looks significantly more uniform than for the erasure data generation, which explains the 6x increase in performance. The next steps should be looking into what can be done to get the expected ~8x performance improvement for such a parallelizable workload (It can be achieved if you turn off garbage collection, I tried just for fun.)
 
 ## Combining the Two Approaches
-I also ran benchmarks for combining the two approaches. They're about what you would expect if you added the times for each previous two benchmarks.
+I also ran benchmarks for combining the two approaches. They're about what you would expect if you added the times for each previous two benchmarks (see `combined_performance.png`).
 
 ## Conclusions
-As mentioned in the issue, there are opportunities to parallelize data availability header generation. The unoptimized implementations provide more performance, but there's still room for improvement. In the future, should the performance be required, there are easy paths forward.
+As mentioned in the issue, there are opportunities to parallelize data availability header generation. These rather unoptimized implementations show that there are options for easy performance gains should they be required.
 
 
 
